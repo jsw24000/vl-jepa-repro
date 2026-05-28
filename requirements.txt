@@ -1,0 +1,7 @@
+torch
+torchvision
+transformers
+numpy
+PyYAML
+pytest
+tqdm

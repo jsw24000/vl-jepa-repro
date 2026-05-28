@@ -1,0 +1,100 @@
+# VL-JEPA Minimal Reproduction
+
+This is a clean minimal reproduction scaffold for VL-JEPA-style training.
+It keeps only the pieces needed for:
+
+```text
+video -> frozen V-JEPA-style encoder -> predictor -> predicted text embedding
+caption -> frozen Y-encoder -> target text embedding
+loss = 1 - cosine(predicted, target)
+```
+
+The existing toy repository is intentionally left untouched.
+
+## Layout
+
+```text
+vl-jepa-repro/
+  configs/default.yaml
+  src/
+    data/                 # video-text manifest dataset
+    vjepa_backbone/       # minimal V-JEPA-style 3D ViT, checkpoint loader, transforms
+    vl_jepa/              # Y-encoder, predictor, model wrapper, loss
+  tests/
+  train_vl_jepa.py
+```
+
+## Manifest Format
+
+Use a CSV file with exactly these columns:
+
+```csv
+video_path,caption,split
+/path/to/video.mp4,a person is cooking,train
+/path/to/video2.mp4,a dog runs on grass,val
+```
+
+## MSR-VTT Preparation
+
+If you downloaded `friedrichor/MSR-VTT` from Hugging Face into `data/msr-vtt`,
+convert its JSON metadata into this repo's CSV manifest format:
+
+```bash
+python scripts/prepare_msrvtt_manifest.py
+```
+
+By default this reads:
+
+```text
+data/msr-vtt/msrvtt_train_7k.json
+data/msr-vtt/msrvtt_test_1k.json
+```
+
+and writes:
+
+```text
+data/train_manifest.csv
+data/val_manifest.csv
+```
+
+MSR-VTT train JSON stores one video with a list of captions, while this training
+code expects one `video_path,caption,split` row per video-caption pair. The
+script expands those caption lists into separate training rows.
+
+## Quick Smoke Test
+
+From this folder:
+
+```bash
+pytest
+```
+
+The tests use a tiny random backbone and a dummy frozen text encoder, so they do not
+require downloading V-JEPA checkpoints or EmbeddingGemma.
+
+## Training
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Edit `configs/default.yaml`, then run:
+
+```bash
+python train_vl_jepa.py --config configs/default.yaml
+```
+
+The default config points at `google/embeddinggemma-300m` for the frozen
+Y-encoder. You must download or point to a V-JEPA checkpoint yourself via
+`model.vjepa_checkpoint`.
+
+## Attribution
+
+The backbone follows the public V-JEPA design: a video Vision Transformer with
+3D tubelet patch embedding and fixed sinusoidal positional embeddings. It is a
+small, local implementation intended for VL-JEPA experiments, not a copy of the
+full V-JEPA training/evaluation repository.
+
+Reference: https://github.com/facebookresearch/jepa

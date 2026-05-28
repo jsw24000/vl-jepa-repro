@@ -1,0 +1,14 @@
+data/
+models/
+outputs/
+.pytest_cache/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pt
+*.pth
+*.pth.tar
+*.safetensors
+.env
+*.log

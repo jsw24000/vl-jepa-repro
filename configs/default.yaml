@@ -1,0 +1,27 @@
+model:
+  backbone_name: vit_large
+  vjepa_checkpoint: ""
+  freeze_vjepa: true
+  image_size: 224
+  num_frames: 16
+  patch_size: 16
+  tubelet_size: 2
+  y_encoder_name: google/embeddinggemma-300m
+  predictor_hidden_dim: 2048
+  predictor_depth: 2
+
+data:
+  train_manifest: data/train_manifest.csv
+  val_manifest: data/val_manifest.csv
+  batch_size: 2
+  num_workers: 2
+
+training:
+  device: cuda
+  epochs: 1
+  learning_rate: 1.0e-4
+  weight_decay: 0.05
+  gradient_clip: 1.0
+  log_every: 10
+  output_dir: outputs
+  mixed_precision: true
