@@ -90,6 +90,55 @@ The default config points at `google/embeddinggemma-300m` for the frozen
 Y-encoder. You must download or point to a V-JEPA checkpoint yourself via
 `model.vjepa_checkpoint`.
 
+## AutoDL
+
+On AutoDL, keep code in `/root/autodl-tmp/vl-jepa-repro` and keep large assets
+outside Git:
+
+```text
+/root/autodl-tmp/models/vitl16.pth.tar
+/root/autodl-tmp/models/embeddinggemma-300m
+/root/autodl-tmp/data/msr-vtt
+```
+
+Clone or update the code:
+
+```bash
+cd /root/autodl-tmp
+git clone https://github.com/jsw24000/vl-jepa-repro.git
+cd vl-jepa-repro
+```
+
+If the repo already exists on AutoDL:
+
+```bash
+cd /root/autodl-tmp/vl-jepa-repro
+git pull
+```
+
+Prepare the remote config:
+
+```bash
+cp configs/autodl_24gb.example.yaml configs/autodl_24gb.yaml
+```
+
+After downloading MSR-VTT on AutoDL, build manifests with:
+
+```bash
+python scripts/prepare_msrvtt_manifest.py \
+  --dataset-root /root/autodl-tmp/data/msr-vtt \
+  --videos-root /root/autodl-tmp/data/msr-vtt/videos/video \
+  --train-out /root/autodl-tmp/vl-jepa-repro/data/train_manifest.csv \
+  --val-out /root/autodl-tmp/vl-jepa-repro/data/val_manifest.csv \
+  --strict-videos
+```
+
+Run training:
+
+```bash
+python train_vl_jepa.py --config configs/autodl_24gb.yaml
+```
+
 ## Attribution
 
 The backbone follows the public V-JEPA design: a video Vision Transformer with

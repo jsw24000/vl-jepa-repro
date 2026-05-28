@@ -1,6 +1,6 @@
-data/
-models/
-outputs/
+/data/
+/models/
+/outputs/
 .pytest_cache/
 __pycache__/
 **/__pycache__/
