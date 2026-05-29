@@ -91,7 +91,7 @@ def collate_videos(batch: list[dict[str, object]]) -> dict[str, object]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Text-to-video retrieval for VL-JEPA.")
     parser.add_argument("--config", default="configs/default.yaml")
-    parser.add_argument("--checkpoint", required=True, help="Path to vl_jepa_epoch_*.pt")
+    parser.add_argument("--checkpoint", required=True, default="outputs/vl_jepa_epoch_1.pt", help="Path to vl_jepa_epoch_*.pt")
     parser.add_argument("--query", default="", help="Natural-language search query.")
     parser.add_argument("--top-k", type=int, default=5)
     parser.add_argument(

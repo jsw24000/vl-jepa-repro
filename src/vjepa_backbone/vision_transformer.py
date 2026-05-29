@@ -1,9 +1,11 @@
+# type: ignore
 """Minimal V-JEPA-style video Vision Transformer.
 
 This module intentionally keeps only the backbone features needed by VL-JEPA:
 3D tubelet patch embedding, fixed sinusoidal positional embeddings, transformer
 blocks, checkpoint-friendly module names, and token output.
 """
+
 
 from __future__ import annotations
 
@@ -17,12 +19,7 @@ from torch import nn
 
 
 class PatchEmbed3D(nn.Module):
-    """Video to tubelet token embedding.
-
-    输入形状是 `(B, C, T, H, W)`。3D 卷积会同时沿时间和空间切块：
-    每个 tubelet 覆盖 `tubelet_size` 帧和一个 `patch_size x patch_size`
-    空间块，输出是一串 token，形状为 `(B, num_tokens, embed_dim)`。
-    """
+    """Video to tubelet token embedding."""
 
     def __init__(
         self,
@@ -42,7 +39,6 @@ class PatchEmbed3D(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Conv3d 输出 `(B, D, T/tubelet, H/patch, W/patch)`，再展平成 token 序列。
         x = self.proj(x)
         return x.flatten(2).transpose(1, 2)
 
@@ -98,8 +94,6 @@ class Attention(nn.Module):
 
 
 class Block(nn.Module):
-    """Pre-norm Transformer block used by the video encoder."""
-
     def __init__(
         self,
         dim: int,
@@ -137,11 +131,7 @@ def get_3d_sincos_pos_embed(
     grid_size: int,
     grid_depth: int,
 ) -> np.ndarray:
-    """Build temporal/spatial sin-cos embeddings for video tokens.
-
-    V-JEPA 的视频 token 同时有时间位置和空间位置。这里把 embedding 维度
-    分配给 `t/h/w` 三个轴，再拼成每个 tubelet token 的固定位置编码。
-    """
+    """Build temporal/spatial sin-cos embeddings for video tokens."""
 
     t_dim = embed_dim // 4
     h_dim = embed_dim // 4
@@ -167,12 +157,7 @@ def get_3d_sincos_pos_embed(
 
 
 class VisionTransformer(nn.Module):
-    """V-JEPA-style video encoder that returns patch/tubelet tokens.
-
-    这个 backbone 只负责把视频编码成 token 序列，不做分类头或文本对齐。
-    在本项目中，它通常被冻结，然后由 `EmbeddingPredictor` 把这些视频 token
-    映射到文本 embedding 空间。
-    """
+    """V-JEPA-style video encoder that returns patch/tubelet tokens."""
 
     def __init__(
         self,
@@ -203,8 +188,6 @@ class VisionTransformer(nn.Module):
         self.patch_embed = PatchEmbed3D(patch_size, tubelet_size, in_chans, embed_dim)
         self.num_patches = grid_depth * grid_size * grid_size
 
-        # 固定 sin-cos 位置编码，不作为可训练参数；官方 V-JEPA checkpoint
-        # 的位置编码形状必须和这里的 `(T/tubelet) * (H/patch) * (W/patch)` 匹配。
         self.pos_embed = nn.Parameter(
             torch.zeros(1, self.num_patches, embed_dim),
             requires_grad=False,
@@ -245,7 +228,6 @@ class VisionTransformer(nn.Module):
                     nn.init.zeros_(module.bias)
 
     def interpolate_pos_encoding(self, x: torch.Tensor) -> torch.Tensor:
-        # 如果输入分辨率/帧数和初始化一致，直接复用 checkpoint 中的固定位置编码。
         _, _, frames, height, width = x.shape
         if (
             frames == self.num_frames
@@ -260,7 +242,6 @@ class VisionTransformer(nn.Module):
         new_t = frames // self.tubelet_size
         new_h = height // self.patch_size
         new_w = width // self.patch_size
-        # 形状先还原成 3D 网格，再用三线性插值适配新的时间/空间尺寸。
         pos = self.pos_embed.reshape(1, old_t, old_h, old_w, dim)
         pos = pos.permute(0, 4, 1, 2, 3)
         pos = nn.functional.interpolate(
@@ -272,7 +253,6 @@ class VisionTransformer(nn.Module):
         return pos.permute(0, 2, 3, 4, 1).reshape(1, new_t * new_h * new_w, dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # 输入 `(B, 3, T, H, W)` -> 输出 `(B, num_tokens, embed_dim)`。
         pos_embed = self.interpolate_pos_encoding(x)
         x = self.patch_embed(x)
         x = x + pos_embed.to(dtype=x.dtype, device=x.device)
