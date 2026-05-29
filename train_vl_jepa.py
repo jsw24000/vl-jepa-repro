@@ -1,3 +1,4 @@
+# type: ignore[reportMissingImports]
 """Single-GPU VL-JEPA minimal training entrypoint."""
 
 from __future__ import annotations

@@ -139,6 +139,21 @@ Run training:
 python train_vl_jepa.py --config configs/autodl_24gb.yaml
 ```
 
+Run text-to-video retrieval with a trained checkpoint:
+
+```bash
+python scripts/retrieve_videos.py \
+  --config configs/autodl_24gb.yaml \
+  --checkpoint outputs/vl_jepa_epoch_1.pt \
+  --query "a person is cooking" \
+  --top-k 5 \
+  --cache outputs/val_video_embeddings.pt
+```
+
+The first run builds the video embedding cache from the validation manifest.
+Later runs with the same `--cache` reuse those video embeddings and only encode
+the new text query.
+
 ## Attribution
 
 The backbone follows the public V-JEPA design: a video Vision Transformer with

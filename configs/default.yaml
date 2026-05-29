@@ -13,7 +13,7 @@ model:
 data:
   train_manifest: data/train_manifest.csv
   val_manifest: data/val_manifest.csv
-  batch_size: 2
+  batch_size: 1
   num_workers: 2
 
 training:
